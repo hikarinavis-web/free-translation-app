@@ -96,6 +96,8 @@ select{
 
   <h3>日本語訳</h3>
   <div id="customerResult" class="result">ここに日本語訳が表示されます</div>
+
+  <button class="speak" onclick="speakCustomerResult()">🔊 日本語で読み上げ</button>
 </div>
 
 <div class="card">
@@ -109,6 +111,8 @@ select{
 
   <h3>翻訳結果</h3>
   <div id="driverResult" class="result">ここに翻訳結果が表示されます</div>
+
+  <button class="speak" onclick="speakDriverResult()">🔊 お客さんの言語で読み上げ</button>
 </div>
 
 <div class="card">
@@ -119,6 +123,8 @@ select{
   <button class="phrase" onclick="setPhrase('現金ですか？カードですか？')">現金ですか？カードですか？</button>
   <button class="phrase" onclick="setPhrase('領収書は必要ですか？')">領収書は必要ですか？</button>
   <button class="phrase" onclick="setPhrase('ここで停まってよろしいですか？')">ここで停まってよろしいですか？</button>
+  <button class="phrase" onclick="setPhrase('シートベルトをお願いします')">シートベルトをお願いします</button>
+  <button class="phrase" onclick="setPhrase('少々お待ちください')">少々お待ちください</button>
 </div>
 
 </div>
@@ -216,6 +222,37 @@ async function translateText(text, source, target, resultId){
     document.getElementById(resultId).innerText =
       "翻訳エラー。通信状況を確認してください。";
   }
+}
+
+function speakText(text, lang){
+  if(!window.speechSynthesis){
+    alert("この端末は音声読み上げに対応していません");
+    return;
+  }
+
+  if(!text || text.includes("ここに") || text.includes("翻訳中")){
+    alert("読み上げる翻訳結果がありません");
+    return;
+  }
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = lang;
+  utterance.rate = 0.85;
+  utterance.pitch = 1;
+
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
+}
+
+function speakDriverResult(){
+  const text = document.getElementById("driverResult").innerText;
+  const lang = document.getElementById("customerLang").value;
+  speakText(text, lang);
+}
+
+function speakCustomerResult(){
+  const text = document.getElementById("customerResult").innerText;
+  speakText(text, "ja-JP");
 }
 </script>
 
