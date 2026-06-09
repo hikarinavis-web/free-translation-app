@@ -3,69 +3,112 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>タクシー音声翻訳アプリ</title>
+<title>タクシー通訳アプリ</title>
 
 <style>
 body{
   font-family: Arial, sans-serif;
-  background:#f4f7fb;
+  background:#f3f6fb;
   margin:0;
-  padding:16px;
+  padding:14px;
+  color:#111827;
 }
 .app{
-  max-width:760px;
+  max-width:820px;
   margin:auto;
 }
 h1{
-  font-size:26px;
   text-align:center;
+  font-size:28px;
+  margin:12px 0;
+}
+h2{
+  font-size:22px;
 }
 .card{
-  background:white;
-  padding:18px;
-  border-radius:16px;
+  background:#fff;
+  border-radius:18px;
+  padding:16px;
   margin-bottom:16px;
-  box-shadow:0 4px 14px rgba(0,0,0,.08);
+  box-shadow:0 4px 16px rgba(0,0,0,.08);
+}
+.notice{
+  background:#fff7ed;
+  border:2px solid #fdba74;
+  padding:12px;
+  border-radius:14px;
+  font-size:18px;
+  line-height:1.5;
+}
+.lang-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
 }
 button{
   width:100%;
-  font-size:20px;
-  padding:16px;
   border:none;
-  border-radius:14px;
-  margin:8px 0;
+  border-radius:16px;
+  padding:16px;
+  font-size:20px;
+  font-weight:bold;
+  margin:6px 0;
   cursor:pointer;
 }
-.listen{
-  background:#0078d7;
+.lang{
+  background:#e0f2fe;
+  color:#0f172a;
+}
+.lang.active{
+  background:#0284c7;
   color:white;
 }
-.speak{
+.listen{
+  background:#2563eb;
+  color:white;
+  font-size:22px;
+}
+.driver{
   background:#16a34a;
   color:white;
 }
 .phrase{
   background:#eef2ff;
   color:#111827;
+  text-align:left;
+}
+.emergency{
+  background:#fee2e2;
+  color:#991b1b;
+  text-align:left;
+}
+.map{
+  background:#f97316;
+  color:white;
+}
+.copy{
+  background:#64748b;
+  color:white;
 }
 .result{
   background:#f1f5f9;
   padding:14px;
-  border-radius:12px;
-  min-height:70px;
-  font-size:20px;
+  border-radius:14px;
+  min-height:64px;
+  font-size:22px;
   line-height:1.6;
+  word-break:break-word;
+}
+.big{
+  font-size:24px;
+  font-weight:bold;
 }
 .small{
-  color:#666;
-  font-size:14px;
+  color:#64748b;
+  font-size:15px;
 }
-select{
-  width:100%;
-  font-size:18px;
-  padding:12px;
-  border-radius:10px;
-  margin:8px 0;
+.hidden{
+  display:none;
 }
 </style>
 </head>
@@ -73,76 +116,123 @@ select{
 <body>
 <div class="app">
 
-<h1>🚕 タクシー音声翻訳</h1>
+<h1>🚕 タクシー通訳アプリ</h1>
+
+<div class="notice">
+  <b>お客さまへ</b><br>
+  Please choose your language.<br>
+  请选择语言 / 언어를 선택해주세요
+</div>
 
 <div class="card">
-  <h2>お客さんの声を聞く</h2>
-  <p class="small">外国人のお客さんに話してもらい、日本語に変換します。</p>
+  <h2>① お客さんの言語を選ぶ</h2>
+  <div class="lang-grid">
+    <button class="lang active" id="btn-en" onclick="setLanguage('en-US','en','英語','English')">🇺🇸 English</button>
+    <button class="lang" id="btn-zh" onclick="setLanguage('zh-CN','zh','中国語','中文')">🇨🇳 中文</button>
+    <button class="lang" id="btn-ko" onclick="setLanguage('ko-KR','ko','韓国語','한국어')">🇰🇷 한국어</button>
+    <button class="lang" id="btn-vi" onclick="setLanguage('vi-VN','vi','ベトナム語','Tiếng Việt')">🇻🇳 Tiếng Việt</button>
+    <button class="lang" id="btn-th" onclick="setLanguage('th-TH','th','タイ語','ไทย')">🇹🇭 ไทย</button>
+    <button class="lang" id="btn-es" onclick="setLanguage('es-ES','es','スペイン語','Español')">🇪🇸 Español</button>
+  </div>
 
-  <select id="customerLang">
-    <option value="en-US">英語</option>
-    <option value="zh-CN">中国語</option>
-    <option value="ko-KR">韓国語</option>
-    <option value="vi-VN">ベトナム語</option>
-    <option value="th-TH">タイ語</option>
-    <option value="fr-FR">フランス語</option>
-    <option value="es-ES">スペイン語</option>
-  </select>
+  <p class="big">選択中：<span id="selectedLang">英語 / English</span></p>
+</div>
+
+<div class="card">
+  <h2>② お客さんの声を聞く</h2>
+  <p class="small">お客さんに話してもらうと、日本語に翻訳します。</p>
 
   <button class="listen" onclick="listenCustomer()">🎤 お客さんの声を聞く</button>
 
   <h3>聞き取った内容</h3>
-  <div id="customerText" class="result">ここに聞き取った文章が表示されます</div>
+  <div id="customerText" class="result">ここにお客さんの言葉が表示されます</div>
 
   <h3>日本語訳</h3>
   <div id="customerResult" class="result">ここに日本語訳が表示されます</div>
 
-  <button class="speak" onclick="speakCustomerResult()">🔊 日本語で読み上げ</button>
+  <button class="driver" onclick="speakCustomerResult()">🔊 日本語で読み上げ</button>
+  <button class="copy" onclick="copyText('customerResult')">📋 日本語訳をコピー</button>
+  <button class="map" onclick="openMapFromCustomer()">📍 Googleマップで検索</button>
 </div>
 
 <div class="card">
-  <h2>運転手が日本語で話す</h2>
-  <p class="small">日本語で話して、お客さんの言語に変換します。</p>
+  <h2>③ 運転手が伝える</h2>
+  <p class="small">日本語で話すと、お客さんの言語に翻訳して読み上げます。</p>
 
-  <button class="speak" onclick="listenDriver()">🎤 日本語で話す</button>
+  <button class="listen" onclick="listenDriver()">🎤 日本語で話す</button>
 
-  <h3>聞き取った日本語</h3>
+  <h3>日本語</h3>
   <div id="driverText" class="result">ここに日本語が表示されます</div>
 
   <h3>翻訳結果</h3>
   <div id="driverResult" class="result">ここに翻訳結果が表示されます</div>
 
-  <button class="speak" onclick="speakDriverResult()">🔊 お客さんの言語で読み上げ</button>
+  <button class="driver" onclick="speakDriverResult()">🔊 お客さんの言語で読み上げ</button>
+  <button class="copy" onclick="copyText('driverResult')">📋 翻訳結果をコピー</button>
 </div>
 
 <div class="card">
-  <h2>よく使うフレーズ</h2>
+  <h2>④ よく使うフレーズ：乗車時</h2>
+  <button class="phrase" onclick="setPhrase('行き先はどちらですか？')">📍 行き先はどちらですか？</button>
+  <button class="phrase" onclick="setPhrase('住所または地図を見せてください。')">🗺 住所または地図を見せてください。</button>
+  <button class="phrase" onclick="setPhrase('シートベルトをお願いします。')">💺 シートベルトをお願いします。</button>
+  <button class="phrase" onclick="setPhrase('荷物をトランクに入れますか？')">🧳 荷物をトランクに入れますか？</button>
+</div>
 
-  <button class="phrase" onclick="setPhrase('行き先はどちらですか？')">行き先はどちらですか？</button>
-  <button class="phrase" onclick="setPhrase('高速道路を使いますか？')">高速道路を使いますか？</button>
-  <button class="phrase" onclick="setPhrase('現金ですか？カードですか？')">現金ですか？カードですか？</button>
-  <button class="phrase" onclick="setPhrase('領収書は必要ですか？')">領収書は必要ですか？</button>
-  <button class="phrase" onclick="setPhrase('ここで停まってよろしいですか？')">ここで停まってよろしいですか？</button>
-  <button class="phrase" onclick="setPhrase('シートベルトをお願いします')">シートベルトをお願いします</button>
-  <button class="phrase" onclick="setPhrase('少々お待ちください')">少々お待ちください</button>
+<div class="card">
+  <h2>⑤ よく使うフレーズ：走行中</h2>
+  <button class="phrase" onclick="setPhrase('高速道路を使いますか？')">🛣 高速道路を使いますか？</button>
+  <button class="phrase" onclick="setPhrase('少々お待ちください。')">⏳ 少々お待ちください。</button>
+  <button class="phrase" onclick="setPhrase('渋滞しています。到着まで時間がかかります。')">🚗 渋滞しています。到着まで時間がかかります。</button>
+  <button class="phrase" onclick="setPhrase('ここで停まってよろしいですか？')">🛑 ここで停まってよろしいですか？</button>
+</div>
+
+<div class="card">
+  <h2>⑥ よく使うフレーズ：支払い</h2>
+  <button class="phrase" onclick="setPhrase('お支払いは現金ですか？カードですか？')">💳 お支払いは現金ですか？カードですか？</button>
+  <button class="phrase" onclick="setPhrase('交通系ICカードは使えます。')">🚃 交通系ICカードは使えます。</button>
+  <button class="phrase" onclick="setPhrase('領収書は必要ですか？')">🧾 領収書は必要ですか？</button>
+  <button class="phrase" onclick="setPhrase('ありがとうございました。お気をつけて。')">🙏 ありがとうございました。お気をつけて。</button>
+</div>
+
+<div class="card">
+  <h2>⑦ 困った時・緊急</h2>
+  <button class="emergency" onclick="setPhrase('もう一度ゆっくり話してください。')">🔁 もう一度ゆっくり話してください。</button>
+  <button class="emergency" onclick="setPhrase('申し訳ありません。翻訳がうまくできません。地図を見せてください。')">📱 翻訳できません。地図を見せてください。</button>
+  <button class="emergency" onclick="setPhrase('病院へ行きますか？')">🏥 病院へ行きますか？</button>
+  <button class="emergency" onclick="setPhrase('警察を呼びますか？')">🚓 警察を呼びますか？</button>
+  <button class="emergency" onclick="setPhrase('忘れ物をしましたか？')">🧳 忘れ物をしましたか？</button>
 </div>
 
 </div>
 
 <script>
+let currentSpeechLang = "en-US";
+let currentTranslateCode = "en";
+let currentLangName = "英語";
+let currentLangDisplay = "English";
+
 const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition;
 
-function getTargetLangCode(){
-  const lang = document.getElementById("customerLang").value;
-  if(lang.startsWith("en")) return "en";
-  if(lang.startsWith("zh")) return "zh";
-  if(lang.startsWith("ko")) return "ko";
-  if(lang.startsWith("vi")) return "vi";
-  if(lang.startsWith("th")) return "th";
-  if(lang.startsWith("fr")) return "fr";
-  if(lang.startsWith("es")) return "es";
-  return "en";
+function setLanguage(speechLang, translateCode, langName, langDisplay){
+  currentSpeechLang = speechLang;
+  currentTranslateCode = translateCode;
+  currentLangName = langName;
+  currentLangDisplay = langDisplay;
+
+  document.getElementById("selectedLang").innerText =
+    langName + " / " + langDisplay;
+
+  const buttons = document.querySelectorAll(".lang");
+  buttons.forEach(btn => btn.classList.remove("active"));
+
+  if(translateCode === "en") document.getElementById("btn-en").classList.add("active");
+  if(translateCode === "zh") document.getElementById("btn-zh").classList.add("active");
+  if(translateCode === "ko") document.getElementById("btn-ko").classList.add("active");
+  if(translateCode === "vi") document.getElementById("btn-vi").classList.add("active");
+  if(translateCode === "th") document.getElementById("btn-th").classList.add("active");
+  if(translateCode === "es") document.getElementById("btn-es").classList.add("active");
 }
 
 function listenCustomer(){
@@ -152,10 +242,11 @@ function listenCustomer(){
   }
 
   const recognition = new SpeechRecognition();
-  recognition.lang = document.getElementById("customerLang").value;
+  recognition.lang = currentSpeechLang;
   recognition.interimResults = false;
 
-  document.getElementById("customerText").innerText = "聞き取り中...";
+  document.getElementById("customerText").innerText =
+    currentLangName + "で聞き取り中...";
   document.getElementById("customerResult").innerText = "翻訳中...";
 
   recognition.start();
@@ -163,12 +254,13 @@ function listenCustomer(){
   recognition.onresult = async function(event){
     const text = event.results[0][0].transcript;
     document.getElementById("customerText").innerText = text;
-    await translateText(text, getTargetLangCode(), "ja", "customerResult");
+    await translateText(text, currentTranslateCode, "ja", "customerResult");
   };
 
   recognition.onerror = function(){
     document.getElementById("customerText").innerText = "音声認識エラー";
-    document.getElementById("customerResult").innerText = "もう一度試してください";
+    document.getElementById("customerResult").innerText =
+      "もう一度試すか、言語を変更してください。";
   };
 }
 
@@ -182,7 +274,7 @@ function listenDriver(){
   recognition.lang = "ja-JP";
   recognition.interimResults = false;
 
-  document.getElementById("driverText").innerText = "聞き取り中...";
+  document.getElementById("driverText").innerText = "日本語を聞き取り中...";
   document.getElementById("driverResult").innerText = "翻訳中...";
 
   recognition.start();
@@ -190,22 +282,23 @@ function listenDriver(){
   recognition.onresult = async function(event){
     const text = event.results[0][0].transcript;
     document.getElementById("driverText").innerText = text;
-    await translateText(text, "ja", getTargetLangCode(), "driverResult");
+    await translateText(text, "ja", currentTranslateCode, "driverResult", true);
   };
 
   recognition.onerror = function(){
     document.getElementById("driverText").innerText = "音声認識エラー";
-    document.getElementById("driverResult").innerText = "もう一度試してください";
+    document.getElementById("driverResult").innerText =
+      "もう一度試してください。";
   };
 }
 
 async function setPhrase(text){
   document.getElementById("driverText").innerText = text;
   document.getElementById("driverResult").innerText = "翻訳中...";
-  await translateText(text, "ja", getTargetLangCode(), "driverResult");
+  await translateText(text, "ja", currentTranslateCode, "driverResult", true);
 }
 
-async function translateText(text, source, target, resultId){
+async function translateText(text, source, target, resultId, autoSpeak=false){
   try{
     const url =
       "https://api.mymemory.translated.net/get?q=" +
@@ -215,8 +308,14 @@ async function translateText(text, source, target, resultId){
     const response = await fetch(url);
     const data = await response.json();
 
-    document.getElementById(resultId).innerText =
+    const translated =
       data.responseData.translatedText || "翻訳できませんでした";
+
+    document.getElementById(resultId).innerText = translated;
+
+    if(autoSpeak && resultId === "driverResult"){
+      speakText(translated, currentSpeechLang);
+    }
   }
   catch(error){
     document.getElementById(resultId).innerText =
@@ -246,13 +345,33 @@ function speakText(text, lang){
 
 function speakDriverResult(){
   const text = document.getElementById("driverResult").innerText;
-  const lang = document.getElementById("customerLang").value;
-  speakText(text, lang);
+  speakText(text, currentSpeechLang);
 }
 
 function speakCustomerResult(){
   const text = document.getElementById("customerResult").innerText;
   speakText(text, "ja-JP");
+}
+
+function copyText(id){
+  const text = document.getElementById(id).innerText;
+  navigator.clipboard.writeText(text);
+  alert("コピーしました");
+}
+
+function openMapFromCustomer(){
+  const text = document.getElementById("customerResult").innerText;
+
+  if(!text || text.includes("ここに") || text.includes("翻訳中")){
+    alert("検索できる目的地がありません");
+    return;
+  }
+
+  const url =
+    "https://www.google.com/maps/search/?api=1&query=" +
+    encodeURIComponent(text);
+
+  window.open(url, "_blank");
 }
 </script>
 
