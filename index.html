@@ -3,125 +3,220 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>無料翻訳アプリ</title>
+<title>タクシー音声翻訳アプリ</title>
 
 <style>
-
 body{
-font-family:Arial,sans-serif;
-background:#f5f5f5;
-padding:20px;
-max-width:800px;
-margin:auto;
+  font-family: Arial, sans-serif;
+  background:#f4f7fb;
+  margin:0;
+  padding:16px;
 }
-
-.container{
-background:white;
-padding:20px;
-border-radius:10px;
-box-shadow:0 0 10px rgba(0,0,0,.1);
+.app{
+  max-width:760px;
+  margin:auto;
 }
-
-textarea{
-width:100%;
-height:150px;
-padding:10px;
-margin-bottom:10px;
+h1{
+  font-size:26px;
+  text-align:center;
 }
-
+.card{
+  background:white;
+  padding:18px;
+  border-radius:16px;
+  margin-bottom:16px;
+  box-shadow:0 4px 14px rgba(0,0,0,.08);
+}
 button{
-background:#0078d7;
-color:white;
-border:none;
-padding:10px 20px;
-cursor:pointer;
-border-radius:5px;
+  width:100%;
+  font-size:20px;
+  padding:16px;
+  border:none;
+  border-radius:14px;
+  margin:8px 0;
+  cursor:pointer;
 }
-
-button:hover{
-background:#005fa3;
+.listen{
+  background:#0078d7;
+  color:white;
 }
-
-#result{
-margin-top:20px;
-padding:15px;
-background:#f0f0f0;
-border-radius:5px;
-min-height:50px;
+.speak{
+  background:#16a34a;
+  color:white;
 }
-
+.phrase{
+  background:#eef2ff;
+  color:#111827;
+}
+.result{
+  background:#f1f5f9;
+  padding:14px;
+  border-radius:12px;
+  min-height:70px;
+  font-size:20px;
+  line-height:1.6;
+}
+.small{
+  color:#666;
+  font-size:14px;
+}
+select{
+  width:100%;
+  font-size:18px;
+  padding:12px;
+  border-radius:10px;
+  margin:8px 0;
+}
 </style>
-
 </head>
 
 <body>
+<div class="app">
 
-<div class="container">
+<h1>🚕 タクシー音声翻訳</h1>
 
-<h1>無料翻訳アプリ</h1>
+<div class="card">
+  <h2>お客さんの声を聞く</h2>
+  <p class="small">外国人のお客さんに話してもらい、日本語に変換します。</p>
 
-<textarea id="inputText"
-placeholder="翻訳したい文章を入力"></textarea>
+  <select id="customerLang">
+    <option value="en-US">英語</option>
+    <option value="zh-CN">中国語</option>
+    <option value="ko-KR">韓国語</option>
+    <option value="vi-VN">ベトナム語</option>
+    <option value="th-TH">タイ語</option>
+    <option value="fr-FR">フランス語</option>
+    <option value="es-ES">スペイン語</option>
+  </select>
 
-<br><br>
+  <button class="listen" onclick="listenCustomer()">🎤 お客さんの声を聞く</button>
 
-<button onclick="translateText()">
-翻訳する
-</button>
+  <h3>聞き取った内容</h3>
+  <div id="customerText" class="result">ここに聞き取った文章が表示されます</div>
 
-<div id="result">
-翻訳結果が表示されます
+  <h3>日本語訳</h3>
+  <div id="customerResult" class="result">ここに日本語訳が表示されます</div>
+</div>
+
+<div class="card">
+  <h2>運転手が日本語で話す</h2>
+  <p class="small">日本語で話して、お客さんの言語に変換します。</p>
+
+  <button class="speak" onclick="listenDriver()">🎤 日本語で話す</button>
+
+  <h3>聞き取った日本語</h3>
+  <div id="driverText" class="result">ここに日本語が表示されます</div>
+
+  <h3>翻訳結果</h3>
+  <div id="driverResult" class="result">ここに翻訳結果が表示されます</div>
+</div>
+
+<div class="card">
+  <h2>よく使うフレーズ</h2>
+
+  <button class="phrase" onclick="setPhrase('行き先はどちらですか？')">行き先はどちらですか？</button>
+  <button class="phrase" onclick="setPhrase('高速道路を使いますか？')">高速道路を使いますか？</button>
+  <button class="phrase" onclick="setPhrase('現金ですか？カードですか？')">現金ですか？カードですか？</button>
+  <button class="phrase" onclick="setPhrase('領収書は必要ですか？')">領収書は必要ですか？</button>
+  <button class="phrase" onclick="setPhrase('ここで停まってよろしいですか？')">ここで停まってよろしいですか？</button>
 </div>
 
 </div>
 
 <script>
+const SpeechRecognition =
+  window.SpeechRecognition || window.webkitSpeechRecognition;
 
-async function translateText(){
-
-const text =
-document.getElementById("inputText").value;
-
-if(!text){
-alert("文章を入力してください");
-return;
+function getTargetLangCode(){
+  const lang = document.getElementById("customerLang").value;
+  if(lang.startsWith("en")) return "en";
+  if(lang.startsWith("zh")) return "zh";
+  if(lang.startsWith("ko")) return "ko";
+  if(lang.startsWith("vi")) return "vi";
+  if(lang.startsWith("th")) return "th";
+  if(lang.startsWith("fr")) return "fr";
+  if(lang.startsWith("es")) return "es";
+  return "en";
 }
 
-document.getElementById("result").innerHTML =
-"翻訳中...";
+function listenCustomer(){
+  if(!SpeechRecognition){
+    alert("このブラウザは音声認識に対応していません。Chromeで開いてください。");
+    return;
+  }
 
-try{
+  const recognition = new SpeechRecognition();
+  recognition.lang = document.getElementById("customerLang").value;
+  recognition.interimResults = false;
 
-const response = await fetch(
-"https://translate.argosopentech.com/translate",
-{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-q:text,
-source:"ja",
-target:"en",
-format:"text"
-})
-});
+  document.getElementById("customerText").innerText = "聞き取り中...";
+  document.getElementById("customerResult").innerText = "翻訳中...";
 
-const data = await response.json();
+  recognition.start();
 
-document.getElementById("result").innerHTML =
-data.translatedText;
+  recognition.onresult = async function(event){
+    const text = event.results[0][0].transcript;
+    document.getElementById("customerText").innerText = text;
+    await translateText(text, getTargetLangCode(), "ja", "customerResult");
+  };
 
-}
-catch(error){
-
-document.getElementById("result").innerHTML =
-"翻訳エラー";
-
+  recognition.onerror = function(){
+    document.getElementById("customerText").innerText = "音声認識エラー";
+    document.getElementById("customerResult").innerText = "もう一度試してください";
+  };
 }
 
+function listenDriver(){
+  if(!SpeechRecognition){
+    alert("このブラウザは音声認識に対応していません。Chromeで開いてください。");
+    return;
+  }
+
+  const recognition = new SpeechRecognition();
+  recognition.lang = "ja-JP";
+  recognition.interimResults = false;
+
+  document.getElementById("driverText").innerText = "聞き取り中...";
+  document.getElementById("driverResult").innerText = "翻訳中...";
+
+  recognition.start();
+
+  recognition.onresult = async function(event){
+    const text = event.results[0][0].transcript;
+    document.getElementById("driverText").innerText = text;
+    await translateText(text, "ja", getTargetLangCode(), "driverResult");
+  };
+
+  recognition.onerror = function(){
+    document.getElementById("driverText").innerText = "音声認識エラー";
+    document.getElementById("driverResult").innerText = "もう一度試してください";
+  };
 }
 
+async function setPhrase(text){
+  document.getElementById("driverText").innerText = text;
+  document.getElementById("driverResult").innerText = "翻訳中...";
+  await translateText(text, "ja", getTargetLangCode(), "driverResult");
+}
+
+async function translateText(text, source, target, resultId){
+  try{
+    const url =
+      "https://api.mymemory.translated.net/get?q=" +
+      encodeURIComponent(text) +
+      "&langpair=" + source + "|" + target;
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    document.getElementById(resultId).innerText =
+      data.responseData.translatedText || "翻訳できませんでした";
+  }
+  catch(error){
+    document.getElementById(resultId).innerText =
+      "翻訳エラー。通信状況を確認してください。";
+  }
+}
 </script>
 
 </body>
